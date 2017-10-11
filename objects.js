@@ -284,6 +284,48 @@ SpriteMorph.prototype.initBlocks = function () {
             spec: 'direction'
         },
 
+        // ROS Motion
+        rosInit: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'motion',
+            spec: 'ROS init'
+        },
+        moveForward: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'motion',
+            spec: 'ROS move forward %n meters',
+            defaults: [10]
+        },
+        moveBackwards: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'motion',
+            spec: 'ROS move backwards %n meters',
+            defaults: [10]
+        },
+        moveStop: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'motion',
+            spec: 'ROS move stop %key'
+        },
+        rotateLeft: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'motion',
+            spec: 'ROS rotate left by %n degrees',
+            defaults: [10]
+        },
+        rotateRight: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'motion',
+            spec: 'ROS rotate right by %n degrees',
+            defaults: [10]
+        },
+
         // Looks
         doSwitchToCostume: {
             type: 'command',
@@ -790,7 +832,6 @@ SpriteMorph.prototype.initBlocks = function () {
         },
 
         // Sensing
-
         reportTouchingObject: {
             only: SpriteMorph,
             type: 'predicate',
@@ -923,6 +964,32 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'sensing',
             spec: 'my %get',
             defaults: [['neighbors']]
+        },
+        // ROS Sensing
+        motorLeft: {
+            type: 'reporter',
+            category: 'sensing',
+            spec: 'Robot motor left'
+        },
+        motorRight: {
+            type: 'reporter',
+            category: 'sensing',
+            spec: 'Robot motor right'
+        },
+        frontSensor: {
+            type: 'reporter',
+            category: 'sensing',
+            spec: 'Front sensor distance'
+        },
+        rightSensor: {
+            type: 'reporter',
+            category: 'sensing',
+            spec: 'Right sensor distance'
+        },
+        leftSensor: {
+            type: 'reporter',
+            category: 'sensing',
+            spec: 'Left sensor distance'
         },
 
         // Operators
@@ -1864,6 +1931,16 @@ SpriteMorph.prototype.blockTemplates = function (category) {
 
     if (cat === 'motion') {
 
+        blocks.push(block('rosInit'));
+        blocks.push('-');
+        blocks.push(block('moveForward'));
+        blocks.push(block('moveBackwards'));
+        blocks.push(block('moveStop'));
+        blocks.push('-');
+        blocks.push(block('rotateLeft'));
+        blocks.push(block('rotateRight'));
+        blocks.push('=');
+
         blocks.push(block('forward'));
         blocks.push(block('turn'));
         blocks.push(block('turnLeft'));
@@ -2082,6 +2159,15 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('doSetFastTracking'));
         blocks.push('-');
         blocks.push(block('reportDate'));
+
+        blocks.push('-');
+        blocks.push(block('motorLeft'));
+        blocks.push(block('motorRight'));
+        blocks.push('-');
+        blocks.push(block('frontSensor'));
+        blocks.push(block('rightSensor'));
+        blocks.push(block('leftSensor'));
+
 
     // for debugging: ///////////////
 
@@ -4411,6 +4497,89 @@ SpriteMorph.prototype.nestingBounds = function () {
         }
     });
     return result;
+};
+
+var global_frontSensor = 0;
+var global_leftSensor = 0;
+var global_rightSensor = 0;
+var global_motorLeft = 0;
+var global_motorRight = 0;
+
+// SpriteMorph motion ROS primitives
+SpriteMorph.prototype.rosInit = function () {
+    console.log("moveInit");
+    global_frontSensor = 0;
+    global_leftSensor = 0;
+    global_rightSensor = 0;
+};
+SpriteMorph.prototype.moveForward = function (meters) {
+    console.log("moveForward: " + meters);
+
+    global_frontSensor = global_frontSensor + 1;
+    global_leftSensor = global_leftSensor + 1;
+    global_rightSensor = global_rightSensor + 1;
+
+    global_motorLeft = 1;
+    global_motorRight = 1;
+
+    handleKey(87, true);
+};
+
+SpriteMorph.prototype.moveBackwards = function (meters) {
+    console.log("moveBackwards: " + meters);
+    global_motorLeft = -1;
+    global_motorRight = -1;
+
+    handleKey(83, true);
+};
+
+SpriteMorph.prototype.moveStop = function (key) {
+    console.log("moveStop");
+    global_motorLeft = 0;
+    global_motorRight = 0;
+
+    if (key == "w") handleKey(87, false);
+    if (key == "s") handleKey(83, false);
+    if (key == "a") handleKey(65, false);
+    if (key == "d") handleKey(68, false);
+};
+
+SpriteMorph.prototype.rotateLeft = function (degrees) {
+    console.log("RotateLeft: " + degrees);
+    global_motorLeft = -1;
+    global_motorRight = 1;
+
+    handleKey(65, true);
+};
+
+SpriteMorph.prototype.rotateRight = function (degrees) {
+    console.log("RotateRight: " + degrees);
+    global_motorLeft = 1;
+    global_motorRight = -1;
+
+    handleKey(68, true);
+};
+
+// SpriteMorph sensing ROS primitives
+
+SpriteMorph.prototype.motorLeft = function () {
+    return global_motorLeft;
+};
+
+SpriteMorph.prototype.motorRight = function () {
+    return global_motorRight;
+};
+
+SpriteMorph.prototype.frontSensor = function () {
+    return global_frontSensor;
+};
+
+SpriteMorph.prototype.rightSensor = function () {
+    return global_rightSensor;
+};
+
+SpriteMorph.prototype.leftSensor = function () {
+    return global_leftSensor;
 };
 
 // SpriteMorph motion primitives
