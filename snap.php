@@ -1,7 +1,8 @@
 <?php
-
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Headers", "Origin, X-Request-Width, Content-Type, Accept");
 // Include secret_hash, the same file included in ROS Robot
-$secret_hash = file_get_contents('.secret_hash');
+$secret_hash = /*file_get_contents('.secret_hash')*/ "";
 
 $client = "127.0.0.1";
 $dest = "127.0.0.1";
